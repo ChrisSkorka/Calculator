@@ -1,10 +1,226 @@
-import math, pyperclip, os, re, traceback
+#!/usr/bin/env python
+# coding: utf-8
+
+# # Imports
+
+# In[1]:
+
+
+import math, pyperclip, os, re
 from decimal import Decimal
 import numpy as np
 from functools import reduce
 from itertools import product
 from datetime import datetime, date, time
 
+
+# # Docs
+
+# In[2]:
+
+
+"""
+Data types: Real, Complex, Int, Boolean, String, Undefined
+Data structures: Scalar, Vector, Matrix, ...
+Variables: v
+Functions: fun
+Named operators: v operation u
+Conversion specifier: 45deg
+Data properties: object.property
+Oppertation: Numeric, Sets, Comparison 
+
+Data Structures
+Tensor: [a, b,, c, d,,, ...]
+List: (a, b, c, ...)
+Function Body: {expression}
+
+Implicit Operations
+2(expression)      *
+(expression)2      *
+var(expression)    *
+fun(parameters)    call
+
+Named operators
+on two values: v operation u
+on one value: v.operation
+
+Input and Output conversion
+1m + 12cm @ cm
+2hr + 45min + 1hr + 30min @ datetime
+0b1100 * 0xFF @ dec
+
+Basic Operations:
+Standard:       | Bitwise: int&bool | Comparison:           | 
++           add | ~             not | ==             equals | 
+-      subtract | &&            and | !=          not equal | 
+*      multiply | ||             or | <           less than | 
+/        divide | <xor>         xor | >        greater then | 
+//      int div | <<     left shift | <=      less or equal | 
+%       modulus | >>    right shift | >=   greater or equal | 
+^         power |                   |                       | 
+!     factorial |                   |                       | 
+|val|  absolute |                   |                       | 
+=    assignment |                   |                       | 
+
+Ternary Operators
+= =                return values = function = body
+a < x < b          between
+a if cond else b   
+
+Higher Ranking Data Structure Operations:
+Vector:                 | Matrix:                          | Reductions:
+<dot>       dot product | <matmul>   matrix multiplication | <all>
+<cross>   cross product | |mat|                            | <any>
+|vec|            length | .T              transpose matrix | <
+.length          length | 
+.angle            angle | 
+
+
+
+1 + sqrt 4
+1 + sqrt x
+1 + $4
+1 + 3 root 8
+1 + b root x
+1 + b $ x
+
+10 nPr 2
+n nPr r
+10 nCr 2
+n nCr r
+
+[1, 2,, 3, 4] # [5, 6,, 7, 8]
+[1, 2,, 3, 4].T
+mat1.T
+
+5*x
+
+sin 30deg
+sin pi
+sin2 pi
+sini 0.5
+
+Function definitions
+fun = x => x^2               single value output
+fun = x => [x, x*2, x^2]     tensor outputs
+fun = x => (x, x*2, x^2)     multiple outputs
+fun = x => {                 piecewise function
+    0,   if x < 0 ; 
+    x^2, if 0 <= x <= 1 ; 
+    x,   else
+}
+fun(x) = {                  piecewise function
+    0   if x < 0
+    x^2 if 0 <= x <= 1
+    x   else
+}
+
+fun(x,y,z) = {
+    a = x+2
+    b = y*2
+    c = z^2
+    (a,b,c)
+}
+
+if x < 0 {
+    x = 0
+}
+
+for i = 0:10{
+    x += i
+}
+
+while x < 0 {
+    x += 1
+}
+
+@display = scientific 8
+@display = hex
+
+
+Statistical Operations:
+"""
+None
+
+
+# In[3]:
+
+
+"""
+Conversion specifiers
+
+Time:
+    Seconds: s, ms, µs, ns, ps, 
+        fs, as, zs, ys, ks, Ms, Gs, Ts, Ps, Es, Zs, Ys
+    Other: min, hr, D, W, M, Y, am, pm
+    
+Distance:
+    Metric: m, dm, cm, mm, µm, nm, pm, km, 
+        fm, am, zm, ym, Mm, Gm, Tm, Pm, Em, Zm, Ym
+    Imperial: th, in, ft, yd, mi
+    Other: nmi
+
+Mass: 
+    Metrix: mg, µg, ng, pg, kg, Mg, tonne
+        dg, cg, fg, ag, zg, yg, dag, hg, Mg, Gg, Tg, Pg, Eg, Zg, Yg
+    Imperial: oz, lb, ton
+    Other: mol
+    
+Temparature: K, C, F, R
+
+Luminosity: cd, lx
+
+Force: N, kN, lbf, pdl
+
+"""
+None
+
+
+# # Classes
+
+# ## Exceptions
+
+# ### TokenNotAllowedException
+
+# In[4]:
+
+
+class TokenNotAllowedException(Exception):
+    def __init__(self, source, ln=None, offset=None):
+        if ln == None and offset == None:
+            ln = source.ln
+            offset = source.offset
+            source = source.source
+            
+        message = f"\n{source.getSourcePointerString(ln, offset)}"
+        
+        super().__init__(message)
+
+
+# ### VariableNotDefined
+
+# In[5]:
+
+
+class VariableNotDefined(Exception):
+    def __init__(self, name):
+        super().__init__(f"'{name}'")
+
+
+# ### NotImplementedException
+
+# In[6]:
+
+
+class NotImplementedException(Exception):
+    pass
+
+
+# ## Token Matching
+
+# ### TokenOperandDefinition
+
+# In[7]:
 
 
 class TokenOperandDefinition():
@@ -25,6 +241,10 @@ class TokenOperandDefinition():
     def __str__(self):
         return f'TokenOperandDefinition({self.token}, {self.precedence})'
 
+
+# ### TokenGroupDefinition
+
+# In[8]:
 
 
 class TokenGroupDefinition():
@@ -52,6 +272,10 @@ class TokenGroupDefinition():
         return f'TokenGroupDefinition({self.open_token}, {self.close_token})'
 
 
+# ### TokenNewItemDefinition
+
+# In[9]:
+
 
 class TokenNewItemDefinition():
     """Defines an item seperation token that can be matched with using a string search"""
@@ -70,6 +294,54 @@ class TokenNewItemDefinition():
         return f'TokenNewItemDefinition({self.token}, {self.levels})'
 
 
+# ### Source
+
+# In[10]:
+
+
+class Source:
+    
+    def __init__(self, string=''):
+        self.string = string
+        self.lines = []
+        
+    def set(self, string):
+        self.string = string
+        self.lines = string.splitlines(True)
+        
+    def getSourcePointerString(self, ln, offset):
+        ln_number_string = str(ln+1)
+        line = f'{ln_number_string}: {self.lines[ln]}'
+        pointer = ' ' * (len(ln_number_string) + 2 + offset) + '↑'
+        sep = '' if '\n' in line[-2:] else '\n'
+        
+        return line + sep + pointer
+
+
+# ### Token
+
+# In[11]:
+
+
+class Token:
+    
+    def __init__(self, token_type, string, ln, offset, source):
+        self.token_type = token_type
+        self.string     = string
+        self.ln         = ln
+        self.offset     = offset
+        self.source     = source
+        
+    def getSourcePointerString(self):
+        return self.source.getSourcePointerString(self.ln, self.offset)
+
+
+# ## Token Tree Nodes
+
+# ### Abstract NodeToken
+
+# In[12]:
+
 
 class NodeToken():
     """represents a value, operation or grouping node that returns an evaluabe that can be evaluated to return a value"""
@@ -77,28 +349,32 @@ class NodeToken():
     def is_complete(self):
         """Returns whether this token is complete, if false, it is not a valud token and interpreting failed"""
         
-        raise Exception('is_complete() not implemented')
+        raise NotImplementedException('NodeToken.is_complete()')
         
     def set_left(self, node):
         """sets the left child node if it exists"""
         
-        raise Exception('set_left(node) not implemented')
+        raise NotImplementedException('NodeToken.set_left(node)')
 
     def set_right(self, node):
         """sets the right child node if it exists"""
         
-        raise Exception('set_right(node) not implemented')
+        raise NotImplementedException('NodeToken.set_right(node)')
         
     def get_right(self):
         """segetsts the right child node if it exists"""
         
-        raise Exception('get_right() not implemented')
+        raise NotImplementedException('NodeToken.get_right()')
         
     def get_evaluable(self):
         """return an Evaluable obejct from this token, the token should be complete before this method is called"""
         
-        raise Exception('get_evaluable() not implemented')
+        raise NotImplementedException('NodeToken.get_evaluable()')
 
+
+# ### NodeBinary
+
+# In[13]:
 
 
 class NodeBinary(NodeToken):
@@ -112,7 +388,7 @@ class NodeBinary(NodeToken):
         self.right = None
     
     def is_complete(self):
-        return self.left != None and self.right != None
+        return self.left != None and self.right != None and self.left.is_complete() and self.right.is_complete()
         
     def set_left(self, node):
         """sets left child"""
@@ -143,6 +419,10 @@ class NodeBinary(NodeToken):
         return f'NodeBinary({self.operation_definition}, left={self.left}, right={self.right})'
 
 
+# ### NodeUnaryLeft
+
+# In[14]:
+
 
 class NodeUnaryLeft(NodeToken):
     """represents a unary operator to the left of its operand with a single child"""
@@ -154,7 +434,7 @@ class NodeUnaryLeft(NodeToken):
         self.child = None
     
     def is_complete(self):
-        return self.child != None
+        return self.child != None and self.child.is_complete()
         
     def set_left(self, node):
         """sets single child"""
@@ -185,6 +465,10 @@ class NodeUnaryLeft(NodeToken):
         return f'NodeUnaryLeft({self.operation_definition}, child={self.child})'
 
 
+# ### NodeUnaryRight
+
+# In[15]:
+
 
 class NodeUnaryRight(NodeToken):
     """represents a unary operator to the right of its operand with a single child"""
@@ -196,7 +480,7 @@ class NodeUnaryRight(NodeToken):
         self.child = None
     
     def is_complete(self):
-        return self.child != None
+        return self.child != None and self.child.is_complete()
         
     def set_left(self, node):
         """sets single child"""
@@ -227,6 +511,10 @@ class NodeUnaryRight(NodeToken):
         return f'NodeUnaryRight({self.operation_definition}, child={self.child})'
 
 
+# ### NodeGroup
+
+# In[16]:
+
 
 class NodeGroup(NodeToken):
     """represents a grouping"""
@@ -241,8 +529,10 @@ class NodeGroup(NodeToken):
         self.shape = {}
         self.sep_count = 0
     
-    def is_complete(self):
-        return self.complete
+    def is_complete(self, test_self=False):
+        complete = test_self or self.complete
+        complete &= all(c.is_complete() for c in self.children)
+        return complete
 
     def close(self):
         self.sep_count = 0
@@ -304,6 +594,10 @@ class NodeGroup(NodeToken):
         return f'NodeGroup({self.group_definition}, children={self.children})'
 
 
+# ### NodeValue
+
+# In[17]:
+
 
 class NodeValue(NodeToken):
     """represents a value"""
@@ -345,6 +639,12 @@ class NodeValue(NodeToken):
         return f'NodeValue({self.value}, {self.value_type})'
 
 
+# ## Evaluable Tree Nodes
+
+# ### Abstract Evaluable
+
+# In[18]:
+
 
 class Evaluable():
     """represents a node that can be evaluated"""
@@ -357,8 +657,12 @@ class Evaluable():
                            **kwargs:  any arguments the Evaluable requires to evaluate
         """
         
-        raise Exception('eval(environment) not implemented')
+        raise NotImplementedException('Evaluable.eval(environment)')
 
+
+# ### VariableFunction
+
+# In[19]:
 
 
 class VariableFunction(Evaluable):
@@ -388,6 +692,10 @@ class VariableFunction(Evaluable):
         return f'VariableFunction_{self.name}({self.parameters})'
 
 
+# ### Variable
+
+# In[20]:
+
 
 class Variable(Evaluable):
     
@@ -405,9 +713,14 @@ class Variable(Evaluable):
             return self
         
         if self.name not in environment:
-            raise Exception(f'Variable {self.name} not found')
+            raise VariableNotDefined(self.name)
         
-        return environment[self.name]
+        value = environment[self.name]
+        
+        if type(value) == Evaluable:
+            value = value.eval(environment)
+        
+        return value
     
     def __repr__(self):
         return str(self)
@@ -415,6 +728,10 @@ class Variable(Evaluable):
     def __str__(self):
         return f"Variable({self.name})"
 
+
+# ### VariableTensor
+
+# In[21]:
 
 
 class VariableTensor(Evaluable):
@@ -445,6 +762,12 @@ class VariableTensor(Evaluable):
         return f'VariableTensor({self.data}, {self.shape})'
 
 
+# ## Data Structures
+
+# ### Tensor
+
+# In[22]:
+
 
 def nd_index_from_shape(int_index, shape):
     devisor = 1
@@ -460,6 +783,8 @@ def nd_index_from_shape(int_index, shape):
     return index
 
 
+# In[23]:
+
 
 def count_end_zeros(data, sub=None):
     if sub:
@@ -472,6 +797,8 @@ def count_end_zeros(data, sub=None):
             break
     return c
 
+
+# In[24]:
 
 
 class Tensor(Evaluable):
@@ -555,6 +882,10 @@ class Tensor(Evaluable):
             return string
 
 
+# ### Array
+
+# In[25]:
+
 
 class Array(Evaluable):
     
@@ -591,6 +922,10 @@ class Array(Evaluable):
         items = ', '.join(items)
         return f'({items})'
 
+
+# ### FunctionSet
+
+# In[26]:
 
 
 class FunctionSet(Evaluable):
@@ -651,7 +986,10 @@ class FunctionSet(Evaluable):
         ranks = [r if r!=None else a for r,a in zip(function_signature.parameter_ranks, actual_ranks)]
         extended_shapes = [s if r==0 else s[:-r] for s,r in zip(actual_shapes, ranks)]
         
-        extended_shape = reduce(lambda x,y: x if len(x) > len(y) else y, extended_shapes)
+        if len(ranks) == len(extended_shapes) == 0:
+            extended_shape = []
+        else:
+            extended_shape = reduce(lambda x,y: x if len(x) > len(y) else y, extended_shapes)
         extended_ranks = [len(s) for s in extended_shapes]
         
         assert all([s in [extended_shape, ()] for s in extended_shapes]), f'Ranks, shape or extended shapes do not match'
@@ -701,6 +1039,9 @@ class FunctionSet(Evaluable):
         return f'{name}({parameter_types})'
 
 
+# ### ConversionFunctionSet
+
+# In[27]:
 
 
 class ConversionFunctionSet(Evaluable):
@@ -729,10 +1070,20 @@ class ConversionFunctionSet(Evaluable):
         return f'<{self.name}>'
 
 
+# ## Data Types
+
+# ### Abstract Data
+
+# In[28]:
+
 
 class Data(Evaluable):
     pass
 
+
+# ### String
+
+# In[29]:
 
 
 class String(Data):
@@ -750,6 +1101,10 @@ class String(Data):
         return f'"{self.value}"'
 
 
+# ### Integer
+
+# In[30]:
+
 
 class Integer(Data):
     
@@ -759,6 +1114,10 @@ class Integer(Data):
     def eval(self, environment, **kwargs):
         return self
 
+
+# ### Real
+
+# In[31]:
 
 
 class Real(Data):
@@ -776,6 +1135,18 @@ class Real(Data):
         return str(self.value)
 
 
+# ### Complex
+
+# In[ ]:
+
+
+
+
+
+# ### Boolean
+
+# In[32]:
+
 
 class Boolean(Data):
     
@@ -785,6 +1156,10 @@ class Boolean(Data):
     def eval(self, environment, **kwargs):
         return self
 
+
+# ### FunctionSignature
+
+# In[33]:
 
 
 class FunctionSignature():
@@ -808,6 +1183,10 @@ class FunctionSignature():
         return f'{self.name}({parameter_types})'
 
 
+# ### Reference
+
+# In[34]:
+
 
 class Reference(Data):
     
@@ -818,6 +1197,10 @@ class Reference(Data):
         return self
 
 
+# ## BuiltIns
+
+# In[35]:
+
 
 class BuiltIns():
     
@@ -826,6 +1209,7 @@ class BuiltIns():
         self.function_parameter_evaluation_parameters = {}
         self.vars = []
         self.binary_operators = []
+        self.binary_operators_continuing = []
         self.left_unary_operators = []
         self.right_unary_operators = []
         self.groups = []
@@ -842,7 +1226,10 @@ class BuiltIns():
         parameter_list[parameter_index] = parameters
         self.function_parameter_evaluation_parameters[function_name] = parameter_list
         
-    def register_binary_operator(self, name, precedence):
+    def register_binary_operator(self, name, precedence, continuing=False):
+        if continuing:
+            self.binary_operators_continuing.append(TokenOperandDefinition(name, precedence))
+        
         self.binary_operators.append(TokenOperandDefinition(name, precedence))
         
     def register_left_unary_operator(self, name, precedence):
@@ -867,16 +1254,28 @@ class BuiltIns():
 built_ins = BuiltIns()
 
 
+# # Built In Functions, Operators and Variables
+
+# ### Groups
+
+# #### Group ( )
+
+# In[36]:
+
 
 def group_round(environment, items, shape, force_array=False, **kwargs):
     
-    if shape == () and force_array == False:
+    if shape == () and len(items) > 0 and force_array == False:
         return items[0]
     else:
         return Array(items)
 
 built_ins.register_grouping('(', ')', {',': 1, '\n': 1}, True, group_round)
 
+
+# #### Group [ ]
+
+# In[37]:
 
 
 def group_squre(environment, items, shape, **kwargs):
@@ -894,12 +1293,20 @@ def group_squre(environment, items, shape, **kwargs):
 built_ins.register_grouping('[', ']', {',': 1, ';': 2, '\n': 0}, False, group_squre)
 
 
+# #### Group { }
+
+# In[38]:
+
 
 def group_curly(environment, items, shape, **kwargs):
     return items[-1]
 
 built_ins.register_grouping('{', '}', {';': 1, '\n': 1}, True, group_curly)
 
+
+# #### Group | |
+
+# In[39]:
 
 
 def group_straight(environment, items, shape, **kwargs):
@@ -915,11 +1322,19 @@ built_ins.register_grouping('|', '|', {}, True, group_straight)
 built_ins.register_grouping('||', '||', {}, True, group_straight)
 
 
+# ### New Item Seperators
+
+# In[40]:
+
 
 built_ins.register_new_item_seperator(',')
 built_ins.register_new_item_seperator(';')
 built_ins.register_new_item_seperator('\n')
 
+
+# ### Variabels
+
+# In[41]:
 
 
 built_ins.register_var('PI', Tensor([Real('3.141592653589793238462643383279502884197')]))
@@ -927,31 +1342,36 @@ built_ins.register_var('e', Tensor([Real('2.718281828459045235360287471352662497
 built_ins.register_var('phi', Tensor([Real('1.61803398874989484820458683436563811772')]))
 
 
+# ### Declare Operations
+
+# In[42]:
+
 
 # Unary Operations: -, +
 built_ins.register_left_unary_operator('+', 7)
 built_ins.register_left_unary_operator('-', 7)
+built_ins.register_left_unary_operator('=', 0)
 
 # Binary Operations:
 
 # arithmetic
-built_ins.register_binary_operator('+',   3)
-built_ins.register_binary_operator('-',   3)
-built_ins.register_binary_operator('*',   4)
+built_ins.register_binary_operator('+',   3, True)
+built_ins.register_binary_operator('-',   3, True)
+built_ins.register_binary_operator('*',   4, True)
 built_ins.register_binary_operator('4',   4)
-built_ins.register_binary_operator('/',   4)
-built_ins.register_binary_operator('//',  4)
-built_ins.register_binary_operator('%',   4)
-built_ins.register_binary_operator('mod', 4)
-built_ins.register_binary_operator('^',   5)
+built_ins.register_binary_operator('/',   4, True)
+built_ins.register_binary_operator('//',  4, True)
+# built_ins.register_binary_operator('%',   4, True)
+built_ins.register_binary_operator('mod', 4, True)
+built_ins.register_binary_operator('^',   5, True)
 
 # matrix
-built_ins.register_binary_operator('#',   4)
-built_ins.register_binary_operator('matmul', 4)
+built_ins.register_binary_operator('#',   4, True)
+built_ins.register_binary_operator('matmul', 4, True)
 
 # vector
-built_ins.register_binary_operator('.*' , 4)
-built_ins.register_binary_operator('dot', 4)
+built_ins.register_binary_operator('.*' , 4, True)
+built_ins.register_binary_operator('dot', 4, True)
 
 # root
 built_ins.register_left_unary_operator('$', 6)
@@ -970,8 +1390,14 @@ built_ins.register_binary_operator('=', 0)
 built_ins.set_evaluation_parameter('=', 0, 'references', True)
 
 # conversion
-built_ins.register_binary_operator('@', -1)
+built_ins.register_binary_operator('@', -1, True)
 
+
+# ### Register Functions
+
+# #### Assignment: =
+
+# In[43]:
 
 
 def assignment(environment, key, value):
@@ -984,9 +1410,18 @@ def assignment(environment, key, value):
         
     return value
 
+def post_assignment(environment, key):
+    value = environment['']
+    return assignment(environment, key, value)
+
 built_ins.register_function('=', assignment, True, (Array, None))
 built_ins.register_function('=', assignment, True, (Reference, None))
+built_ins.register_function('=', post_assignment, True, (Reference,))
 
+
+# #### Function Definition: =>
+
+# In[44]:
 
 
 def define_function(environment, parameters, evaluable):
@@ -995,6 +1430,8 @@ def define_function(environment, parameters, evaluable):
         parameter_names = [parameters.first.value]
     elif type(parameters) == Array:
         parameter_names = [p.first.value for p in parameters.data]
+    elif type(parameters) == tuple:
+        parameter_names = list(parameters)
     
     parameter_types = tuple([None] * len(parameter_names))
     
@@ -1012,10 +1449,18 @@ built_ins.register_function('=>', define_function, True, (Reference, None))
 built_ins.register_function('=>', define_function, True, (Array, None))
 
 
+# #### Unary Operations: -, +
+
+# In[45]:
+
 
 built_ins.register_function('+', lambda t:Tensor(Real(+t.first.value)), None, (Real,), (0,))
 built_ins.register_function('-', lambda t:Tensor(Real(-t.first.value)), None, (Real,), (0,))
 
+
+# #### Binary Operantors: +, -, *, /, //, %, ^
+
+# In[46]:
 
 
 # A + B
@@ -1042,34 +1487,9 @@ built_ins.register_function('mod', lambda a, b: Tensor(Real(a.first.value % b.fi
 built_ins.register_function('^', lambda a, b: Tensor(Real(a.first.value ** b.first.value)), None, (Real, Real), (0, 0))
 
 
+# #### Matrix Multiplication: # #
 
-def matmul(A, B):
-    
-    a_shape = A.shape
-    b_shape = B.shape
-    
-    assert A.rank >= 2 and B.rank >= 2, 'left and right sides must be matrices'
-    assert a_shape[-1] == b_shape[-2], 'left n_cols must equal right n_rows'
-    
-    n_rows = a_shape[0]
-    n_cols = b_shape[1]
-    n_vec = a_shape[1]
-    shape = (n_rows , n_cols)
-    
-    data = np.empty(shape, dtype=object)
-    
-    for row in range(n_rows):
-        for col in range(n_cols):
-            v = 0
-            for i in range(n_vec):
-                v += A[(row, i)].first.value * B[(i, col)].first.value
-            data[row,col] = Real(v)
-    
-    return Tensor(data, shape)
-
-built_ins.register_function('#', matmul, None, (Real, Real), (2, 2))
-built_ins.register_function('matmul', matmul, None, (Real, Real), (2, 2))
-
+# In[47]:
 
 
 def matmul(A, B):
@@ -1099,6 +1519,10 @@ def matmul(A, B):
 built_ins.register_function('#', matmul, None, (Real, Real), (2, 2))
 built_ins.register_function('matmul', matmul, None, (Real, Real), (2, 2))
 
+
+# #### Vector Dot Product: .*
+
+# In[48]:
 
 
 def dot(A, B):
@@ -1121,12 +1545,20 @@ built_ins.register_function('.*', dot, None, (Real, Real), (1, 1))
 built_ins.register_function('dot', dot, None, (Real, Real), (1, 1))
 
 
+# #### Absolute value abs
+
+# In[49]:
+
 
 def absolute(A):
     return Tensor(Real(abs(A.first.value)))
 
 built_ins.register_function('abs', absolute, None, (Real,), (0,))
 
+
+# #### Root and Square root $
+
+# In[50]:
 
 
 def root(A, B):
@@ -1138,6 +1570,10 @@ def sqrt(A):
 built_ins.register_function('$', sqrt, None, (Real,), (0,))
 built_ins.register_function('$', root, None, (Real, Real), (0, 0))
 
+
+# #### Function Call
+
+# In[51]:
 
 
 def function_call(environment, function_set, parameters):
@@ -1155,6 +1591,10 @@ built_ins.register_function('fun', foo, False, (Real,), (0,))
 built_ins.register_function('fun', bar, False, (Real, Real), (0, 0))
 
 
+# #### Tensor Lookup
+
+# In[52]:
+
 
 def tensor_lookup(environment, tensor, parameters):
     index = [int(p.first.value) for p in parameters]
@@ -1163,6 +1603,10 @@ def tensor_lookup(environment, tensor, parameters):
 built_ins.register_function('9', tensor_lookup, True, (Real, Array))
 
 
+# #### Array Lookup
+
+# In[53]:
+
 
 def array_lookup(environment, array, parameters):
     index = [int(p.first.value) for p in parameters]
@@ -1170,6 +1614,10 @@ def array_lookup(environment, array, parameters):
 
 built_ins.register_function('9', array_lookup, True, (Array, Array))
 
+
+# #### Conversion @, [implocit]
+
+# In[54]:
 
 
 def conversion_forwards_function_call(environment, tensor, conversion_function_set):
@@ -1181,6 +1629,12 @@ def conversion_backwards_function_call(environment, tensor, conversion_function_
 built_ins.register_function('9', conversion_forwards_function_call, True, (None, ConversionFunctionSet))
 built_ins.register_function('@', conversion_backwards_function_call, True, (None, ConversionFunctionSet))
 
+
+# ### Conversion Specifiers
+
+# #### Distance
+
+# In[55]:
 
 
 def km_forwards(km):
@@ -1225,6 +1679,31 @@ def pm_forwards(pm):
 def pm_backwards(m):
     return Real(m.value * Decimal(1000000000000))
 
+
+def in_forwards(_in):
+    return Real(_in.value * Decimal('0.0254'))
+
+def in_backwards(m):
+    return Real(m.value / Decimal('0.0254'))
+
+def ft_forwards(ft):
+    return Real(ft.value * Decimal('0.3048'))
+
+def ft_backwards(m):
+    return Real(m.value / Decimal('0.3048'))
+
+def yd_forwards(yd):
+    return Real(yd.value * Decimal('0.9144'))
+
+def yd_backwards(m):
+    return Real(m.value / Decimal('0.9144'))
+
+def mi_forwards(mi):
+    return Real(mi.value * Decimal('1609.344'))
+
+def mi_backwards(m):
+    return Real(m.value / Decimal('1609.344'))
+
 built_ins.register_conversion_function_set('km', km_forwards, km_backwards)
 built_ins.register_conversion_function_set( 'm',  m_forwards,  m_backwards)
 built_ins.register_conversion_function_set('cm', cm_forwards, cm_backwards)
@@ -1233,6 +1712,15 @@ built_ins.register_conversion_function_set('um', um_forwards, um_backwards)
 built_ins.register_conversion_function_set('nm', nm_forwards, nm_backwards)
 built_ins.register_conversion_function_set('pm', pm_forwards, pm_backwards)
 
+built_ins.register_conversion_function_set('in', in_forwards, in_backwards)
+built_ins.register_conversion_function_set('ft', ft_forwards, ft_backwards)
+built_ins.register_conversion_function_set('yd', yd_forwards, yd_backwards)
+built_ins.register_conversion_function_set('mi', mi_forwards, mi_backwards)
+
+
+# #### Area
+
+# In[56]:
 
 
 def km2_forwards(km):
@@ -1285,6 +1773,10 @@ built_ins.register_conversion_function_set('um2', um2_forwards, um2_backwards)
 built_ins.register_conversion_function_set('nm2', nm2_forwards, nm2_backwards)
 built_ins.register_conversion_function_set('pm2', pm2_forwards, pm2_backwards)
 
+
+# #### Volume
+
+# In[57]:
 
 
 def km3_forwards(km):
@@ -1345,6 +1837,10 @@ built_ins.register_conversion_function_set('um3', um3_forwards, um3_backwards)
 built_ins.register_conversion_function_set('nm3', nm3_forwards, nm3_backwards)
 built_ins.register_conversion_function_set('pm3', pm3_forwards, pm3_backwards)
 
+
+# #### Time
+
+# In[58]:
 
 
 def  ms_forwards(ms):
@@ -1426,26 +1922,34 @@ built_ins.register_conversion_function_set( 'day',  day_forwards,  day_backwards
 built_ins.register_conversion_function_set('time', time_forwards, time_backwards)
 
 
+# # Define Token
 
-TOKEN_TYPE_STRING =   'string'
-TOKEN_TYPE_INTEGER =  'integer'
-TOKEN_TYPE_NUMBER =   'number'
-TOKEN_TYPE_OPERATOR = 'operand'
+# ## Tokens Types
+
+# In[59]:
+
+
+TOKEN_TYPE_STRING     = 'string'
+TOKEN_TYPE_INTEGER    = 'integer'
+TOKEN_TYPE_NUMBER     = 'number'
+TOKEN_TYPE_OPERATOR   = 'operand'
 TOKEN_TYPE_OPEN_GROUP = 'group'
-TOKEN_TYPE_LITERAL =  'literal'
+TOKEN_TYPE_LITERAL    = 'literal'
 
-TOKEN_TYPE_OPEN_GROUP = 'open group'
-TOKEN_TYPE_CLOSE_GROUP = 'close group'
-TOKEN_TYPE_NEW_ITEM    = 'new item'
-TOKEN_TYPE_BINARY      = 'binary operand'
-TOKEN_TYPE_UNARY_LEFT  = 'left unary operand'
-TOKEN_TYPE_UNARY_RIGHT = 'right unary operand'
+TOKEN_TYPE_OPEN_GROUP        = 'open group'
+TOKEN_TYPE_CLOSE_GROUP       = 'close group'
+TOKEN_TYPE_NEW_ITEM          = 'new item'
+TOKEN_TYPE_BINARY            = 'binary operand'
+TOKEN_TYPE_BINARY_CONTINUING = 'continuing binary operand'
+TOKEN_TYPE_UNARY_LEFT        = 'left unary operand'
+TOKEN_TYPE_UNARY_RIGHT       = 'right unary operand'
 
 OPERAND_TYPES = [
     TOKEN_TYPE_OPEN_GROUP,
     TOKEN_TYPE_CLOSE_GROUP, 
     TOKEN_TYPE_NEW_ITEM, 
     TOKEN_TYPE_BINARY, 
+    TOKEN_TYPE_BINARY_CONTINUING, 
     TOKEN_TYPE_UNARY_LEFT, 
     TOKEN_TYPE_UNARY_RIGHT, 
 ]
@@ -1458,16 +1962,25 @@ TOKEN_TYPE_VALUE = [
 ]
 
 
+# ## Token Operations
+
+# In[60]:
+
 
 token_definitions = {
-    TOKEN_TYPE_OPEN_GROUP:  built_ins.groups,
-    TOKEN_TYPE_CLOSE_GROUP: built_ins.groups, 
-    TOKEN_TYPE_NEW_ITEM:    built_ins.new_items, 
-    TOKEN_TYPE_BINARY:      built_ins.binary_operators, 
-    TOKEN_TYPE_UNARY_LEFT:  built_ins.left_unary_operators, 
-    TOKEN_TYPE_UNARY_RIGHT: built_ins.right_unary_operators, 
+    TOKEN_TYPE_OPEN_GROUP:        built_ins.groups,
+    TOKEN_TYPE_CLOSE_GROUP:       built_ins.groups, 
+    TOKEN_TYPE_NEW_ITEM:          built_ins.new_items, 
+    TOKEN_TYPE_BINARY:            built_ins.binary_operators, 
+    TOKEN_TYPE_BINARY_CONTINUING: built_ins.binary_operators_continuing, 
+    TOKEN_TYPE_UNARY_LEFT:        built_ins.left_unary_operators, 
+    TOKEN_TYPE_UNARY_RIGHT:       built_ins.right_unary_operators, 
 }
 
+
+# ## Operation Indexing
+
+# In[61]:
 
 
 def find_token_definition(string, token_type, f = lambda x:x.token):
@@ -1477,6 +1990,10 @@ def find_token_definition(string, token_type, f = lambda x:x.token):
             return token_definition
     return None
 
+
+# ## Define Token Regular Expressions
+
+# In[62]:
 
 
 def re_join(l, f=lambda x:x):
@@ -1491,29 +2008,37 @@ re_string =    r"""((\""".*?\""")|('''.*?''')|(".*?")|('.*?'))"""
 re_literal =   r"""([A-Za-z_][A-Za-z0-9_]*)"""
 
 
-re_open_group =           re_join(built_ins.groups, lambda x:x.open_token)
-re_close_group =          re_join(built_ins.groups, lambda x:x.close_token)
-re_binary_operands =      re_join(built_ins.binary_operators, lambda x:x.token)
-re_left_unary_operands =  re_join(built_ins.left_unary_operators, lambda x:x.token)
-re_right_unary_operands = re_join(built_ins.right_unary_operators, lambda x:x.token)
-re_new_item =             re_join(built_ins.new_items, lambda x:x.token)
+re_open_group =                 re_join(built_ins.groups, lambda x:x.open_token)
+re_close_group =                re_join(built_ins.groups, lambda x:x.close_token)
+re_binary_operands =            re_join(built_ins.binary_operators, lambda x:x.token)
+re_binary_continuing_operands = re_join(built_ins.binary_operators_continuing, lambda x:x.token)
+re_left_unary_operands =        re_join(built_ins.left_unary_operators, lambda x:x.token)
+re_right_unary_operands =       re_join(built_ins.right_unary_operators, lambda x:x.token)
+re_new_item =                   re_join(built_ins.new_items, lambda x:x.token)
 
 
 re_tokens = {
-    TOKEN_TYPE_STRING:      re_string,
-    TOKEN_TYPE_INTEGER:     re_integer,
-    TOKEN_TYPE_NUMBER:      re_number,
-    TOKEN_TYPE_LITERAL:     re_literal,
-    TOKEN_TYPE_OPEN_GROUP:  re_open_group,
-    TOKEN_TYPE_BINARY:      re_binary_operands,
-    TOKEN_TYPE_UNARY_LEFT:  re_left_unary_operands,
-    TOKEN_TYPE_UNARY_RIGHT: re_right_unary_operands,
-    TOKEN_TYPE_NEW_ITEM:    re_new_item,
-    TOKEN_TYPE_CLOSE_GROUP: re_close_group,
+    TOKEN_TYPE_STRING:            re_string,
+    TOKEN_TYPE_INTEGER:           re_integer,
+    TOKEN_TYPE_NUMBER:            re_number,
+    TOKEN_TYPE_LITERAL:           re_literal,
+    TOKEN_TYPE_OPEN_GROUP:        re_open_group,
+    TOKEN_TYPE_BINARY:            re_binary_operands,
+    TOKEN_TYPE_BINARY_CONTINUING: re_binary_continuing_operands,
+    TOKEN_TYPE_UNARY_LEFT:        re_left_unary_operands,
+    TOKEN_TYPE_UNARY_RIGHT:       re_right_unary_operands,
+    TOKEN_TYPE_NEW_ITEM:          re_new_item,
+    TOKEN_TYPE_CLOSE_GROUP:       re_close_group,
 }
 
-# re_tokens
+re_tokens
 
+
+# # Parse
+
+# ## Lexing
+
+# In[63]:
 
 
 def re_match_length(string, re_pattern):
@@ -1521,149 +2046,182 @@ def re_match_length(string, re_pattern):
     return match.span()[1] if match != None else 0
 
 
+# In[64]:
 
-# TOKEN_TYPE_STRING
-# TOKEN_TYPE_INTEGER
-# TOKEN_TYPE_NUMBER
-# TOKEN_TYPE_LITERAL
 
-# TOKEN_TYPE_OPEN_GROUP
-# TOKEN_TYPE_BINARY
-# TOKEN_TYPE_UNARY_LEFT
-# TOKEN_TYPE_UNARY_RIGHT
-# TOKEN_TYPE_NEW_ITEM
-# TOKEN_TYPE_CLOSE_GROUP
-
-def lexing(string, ans_available=False):
-    tokens = []
-
-    i = 0
-    while i < len(string):
+class Lexer:
+    def __init__(self, ans_available=False):
+        self.tokens = []
+        self.ans_available = ans_available
         
-        if string[i] in ' ':
-            i += 1
-            continue
-            
-        last_token_type = tokens[-1][0] if len(tokens) > 0 else None
-        allowed_token_types = []
-        allowed_token_types_with_implicit_op = {}
-        allowed_token_types_with_ans = {}
+        self.source_string = ''
+        self.current_ln_offset = 0
+        self.ln_count = 0
+        self.source = Source()
+        
+    def process(self, string):
+        # TOKEN_TYPE_STRING
+        # TOKEN_TYPE_INTEGER
+        # TOKEN_TYPE_NUMBER
+        # TOKEN_TYPE_LITERAL
 
-        # begin with
-        if last_token_type in [
-            None,
-        ]:
+        # TOKEN_TYPE_OPEN_GROUP
+        # TOKEN_TYPE_BINARY
+        # TOKEN_TYPE_BINARY_CONTINUING
+        # TOKEN_TYPE_UNARY_LEFT
+        # TOKEN_TYPE_UNARY_RIGHT
+        # TOKEN_TYPE_NEW_ITEM
+        # TOKEN_TYPE_CLOSE_GROUP
+        
+        tokens = []
+        
+        i = len(self.source_string)
+        string = self.source_string = self.source_string + string
+        self.source.set(string)
+        
+        while i < len(string):
+
+            if string[i] in ' ':
+                i += 1
+                continue
+                
+            offset = i - self.current_ln_offset
+            ln = self.ln_count
             
-            allowed_token_types = [TOKEN_TYPE_BINARY] if ans_available else []
-            allowed_token_types += [
-                TOKEN_TYPE_UNARY_LEFT,
-                TOKEN_TYPE_OPEN_GROUP,
+            if string[i] == '\n':
+                self.current_ln_offset = i+1
+                self.ln_count += 1
+
+            if len(tokens) > 0:
+                last_token_type =  tokens[-1].token_type
+            elif len(self.tokens) > 0:
+                last_token_type = self.tokens[-1].token_type
+            else:
+                last_token_type = None
+                
+            allowed_token_types = []
+            allowed_token_types_with_implicit_op = {}
+            allowed_token_types_with_ans = {}
+
+            # begin with
+            if last_token_type in [
+                None,
+            ]:
+
+                allowed_token_types = [
+                    TOKEN_TYPE_UNARY_LEFT,
+                    TOKEN_TYPE_OPEN_GROUP,
+                    TOKEN_TYPE_NEW_ITEM,
+                    TOKEN_TYPE_CLOSE_GROUP,
+                    *TOKEN_TYPE_VALUE,
+                ]
+                if self.ans_available:
+                    allowed_token_types_with_ans = {
+                        TOKEN_TYPE_UNARY_RIGHT: '',
+                        TOKEN_TYPE_BINARY_CONTINUING: '',
+                    }
+
+            if last_token_type in [                TOKEN_TYPE_OPEN_GROUP,
                 TOKEN_TYPE_NEW_ITEM,
+            ]:
+                allowed_token_types = [
+                    TOKEN_TYPE_UNARY_LEFT,
+                    TOKEN_TYPE_OPEN_GROUP,
+                    TOKEN_TYPE_NEW_ITEM,
+                    TOKEN_TYPE_CLOSE_GROUP,
+                    *TOKEN_TYPE_VALUE,
+                ]
+
+            # after value excluding literal
+            if last_token_type in [
                 TOKEN_TYPE_CLOSE_GROUP,
-                *TOKEN_TYPE_VALUE,
-            ]
-            if ans_available:
-                allowed_token_types_with_ans = {
-                    TOKEN_TYPE_UNARY_RIGHT: '',
-                    TOKEN_TYPE_BINARY: '',
+                TOKEN_TYPE_UNARY_RIGHT,
+                TOKEN_TYPE_STRING,
+                TOKEN_TYPE_INTEGER,
+                TOKEN_TYPE_NUMBER,
+            ]:
+                allowed_token_types = [
+                    TOKEN_TYPE_UNARY_RIGHT,
+                    TOKEN_TYPE_BINARY,
+                    TOKEN_TYPE_NEW_ITEM,
+                    TOKEN_TYPE_CLOSE_GROUP,
+                ]
+                allowed_token_types_with_implicit_op = {
+                    TOKEN_TYPE_OPEN_GROUP: '9',
+                    TOKEN_TYPE_LITERAL: '9',
                 }
-        
-        if last_token_type in [\
-            TOKEN_TYPE_OPEN_GROUP,
-            TOKEN_TYPE_NEW_ITEM,
-        ]:
-            allowed_token_types = [
-                TOKEN_TYPE_UNARY_LEFT,
-                TOKEN_TYPE_OPEN_GROUP,
-                TOKEN_TYPE_NEW_ITEM,
-                TOKEN_TYPE_CLOSE_GROUP,
-                *TOKEN_TYPE_VALUE,
-            ]
 
-        # after value excluding literal
-        if last_token_type in [
-            TOKEN_TYPE_CLOSE_GROUP,
-            TOKEN_TYPE_UNARY_RIGHT,
-            TOKEN_TYPE_STRING,
-            TOKEN_TYPE_INTEGER,
-            TOKEN_TYPE_NUMBER,
-        ]:
-            allowed_token_types = [
-                TOKEN_TYPE_UNARY_RIGHT,
+            # after literal value
+            if last_token_type in [
+                TOKEN_TYPE_LITERAL,
+            ]:
+                allowed_token_types = [
+                    TOKEN_TYPE_UNARY_RIGHT,
+                    TOKEN_TYPE_BINARY,
+                    TOKEN_TYPE_NEW_ITEM,
+                    TOKEN_TYPE_CLOSE_GROUP,
+                ]
+                allowed_token_types_with_implicit_op = {
+                    TOKEN_TYPE_OPEN_GROUP: '9',
+                    TOKEN_TYPE_LITERAL: '9',
+                }
+
+            # after operator
+            if last_token_type in [
                 TOKEN_TYPE_BINARY,
-                TOKEN_TYPE_NEW_ITEM,
-                TOKEN_TYPE_CLOSE_GROUP,
-            ]
-            allowed_token_types_with_implicit_op = {
-                TOKEN_TYPE_OPEN_GROUP: '9',
-                TOKEN_TYPE_LITERAL: '9',
-            }
-            
-        # after literal value
-        if last_token_type in [
-            TOKEN_TYPE_LITERAL,
-        ]:
-            allowed_token_types = [
-                TOKEN_TYPE_UNARY_RIGHT,
-                TOKEN_TYPE_BINARY,
-                TOKEN_TYPE_NEW_ITEM,
-                TOKEN_TYPE_CLOSE_GROUP,
-            ]
-            allowed_token_types_with_implicit_op = {
-                TOKEN_TYPE_OPEN_GROUP: '9',
-                TOKEN_TYPE_LITERAL: '9',
-            }
-
-        # after operator
-        if last_token_type in [
-            TOKEN_TYPE_BINARY,
-            TOKEN_TYPE_UNARY_LEFT,
-
-        ]:
-            allowed_token_types = [
-                TOKEN_TYPE_OPEN_GROUP,
+                TOKEN_TYPE_BINARY_CONTINUING,
                 TOKEN_TYPE_UNARY_LEFT,
-                *TOKEN_TYPE_VALUE,
+
+            ]:
+                allowed_token_types = [
+                    TOKEN_TYPE_OPEN_GROUP,
+                    TOKEN_TYPE_UNARY_LEFT,
+                    *TOKEN_TYPE_VALUE,
+                ]
+
+
+            # find matching token type
+            token_type, token_str = None, None
+
+            all_allowed_token_types = [
+                list(allowed_token_types_with_ans.items()),
+                [(t, None) for t in allowed_token_types],
+                list(allowed_token_types_with_implicit_op.items()),
             ]
-            
-        
-        # find matching token type
-        token_type, token_str = None, None
-        
-        all_allowed_token_types = [
-            list(allowed_token_types_with_ans.items()),
-            [(t, None) for t in allowed_token_types],
-            list(allowed_token_types_with_implicit_op.items()),
-        ]
-        all_allowed_token_types = sum(all_allowed_token_types, [])
-            
-        for possible_token_type, implicit_op in all_allowed_token_types:
-            re_pattern = re_tokens[possible_token_type]
-            
-            l = re_match_length(string[i:], re_pattern)
-            if l > 0:
-                
-                if implicit_op == '':
-                    tokens.append((TOKEN_TYPE_LITERAL, implicit_op))
-                elif implicit_op != None:
-                    tokens.append((TOKEN_TYPE_BINARY, implicit_op))
-                
-                token_type = possible_token_type
-                token_str = string[i:i+l]
-                break
-                
+            all_allowed_token_types = sum(all_allowed_token_types, [])
 
-                    
-        # invalid token
-        if token_type == None:
-            raise Exception(f"Token not allowed at position {i}")
-            i += 1
-        else:
-            tokens.append((token_type, token_str))
-            i += len(token_str)
+            for possible_token_type, implicit_op in all_allowed_token_types:
+                re_pattern = re_tokens[possible_token_type]
 
-    return tokens
+                l = re_match_length(string[i:], re_pattern)
+                if l > 0:
 
+                    if implicit_op == '':
+                        tokens.append(Token(TOKEN_TYPE_LITERAL, implicit_op, ln, offset, self.source))
+                    elif implicit_op != None:
+                        tokens.append(Token(TOKEN_TYPE_BINARY, implicit_op, ln, offset, self.source))
+
+                    token_type = possible_token_type
+                    token_str = string[i:i+l]
+                    break
+
+
+
+            # invalid token
+            if token_type == None:
+                raise TokenNotAllowedException(self.source, ln, offset)
+                i += 1
+            else:
+                tokens.append(Token(token_type, token_str, ln, offset, self.source))
+                i += len(token_str)
+
+        self.tokens += tokens
+        return tokens  
+
+
+# ## Treeify
+
+# In[65]:
 
 
 def bubble_up(focus, new):
@@ -1672,14 +2230,13 @@ def bubble_up(focus, new):
     """
     
     while True:
-#         print('bubble_up', focus.value, type(focus))
-#         if type(focus) != NodeValue and (type(focus) == NodeGroup or focus.precedence < new.precedence):
         if type(focus) == NodeGroup or focus.precedence < new.precedence:
-#             print('return', focus.value)
             return focus
         else:
             focus = focus.parent
 
+
+# In[66]:
 
 
 def bubble_up_to_group(focus):
@@ -1690,228 +2247,228 @@ def bubble_up_to_group(focus):
             focus = focus.parent
 
 
+# In[67]:
 
-# TOKEN_TYPE_STRING
-# TOKEN_TYPE_INTEGER
-# TOKEN_TYPE_NUMBER
-# TOKEN_TYPE_LITERAL
 
-# TOKEN_TYPE_OPEN_GROUP
-# TOKEN_TYPE_BINARY
-# TOKEN_TYPE_UNARY_LEFT
-# TOKEN_TYPE_UNARY_RIGHT
-
-# TOKEN_TYPE_NEW_ITEM
-# TOKEN_TYPE_CLOSE_GROUP
-
-def build_token_tree(tokens):
+class TokenTreeBuilder:
     
-    root = NodeGroup(find_token_definition('{', TOKEN_TYPE_OPEN_GROUP, lambda x:x.open_token), None)
-    focus = root
+    def __init__(self):
+        self.root = NodeGroup(find_token_definition('{', TOKEN_TYPE_OPEN_GROUP, lambda x:x.open_token), None)
+        self.focus = self.root
+
+    def build(self, tokens):
     
-    for token_type, value in tokens:
-        
-        
-        # focus is
-        # Binary Operator
-        # Left Unary Operator
-        if type(focus) in [
-            NodeBinary,
-            NodeUnaryLeft,
-        ]:
-            
-            # next is 
-            # Unary left
-            if token_type == TOKEN_TYPE_UNARY_LEFT:
-#                 print('insert lef unary')
-                
-                operand = find_token_definition(value, TOKEN_TYPE_UNARY_LEFT)
-                next_node = NodeUnaryLeft(operand)
-                
-                focus.set_right(next_node)
-                focus = next_node
-                
-            # next is
-            # Group
-            elif token_type == TOKEN_TYPE_OPEN_GROUP:
-#                 print('insert open group')
-                
-                group = find_token_definition(value, TOKEN_TYPE_OPEN_GROUP, lambda x:x.open_token)
-                next_node = NodeGroup(group)
-                focus.set_right(next_node)
-                focus = next_node
-            
-            # next is
-            # TOKEN_TYPE_STRING
-            # TOKEN_TYPE_INTEGER
-            # TOKEN_TYPE_NUMBER
-            # TOKEN_TYPE_LITERAL
-            elif token_type in TOKEN_TYPE_VALUE:
-#                 print('insert value')
-                
-                next_node = NodeValue(value, token_type)
-                focus.set_right(next_node)
-                focus = next_node
-                
-            else:
-                raise Exception(f"token '{value}' not allowed here")
-            
-            
-        # focus is
-        # Value
-        # Closed Group
-        elif type(focus) == NodeValue or (type(focus) == NodeGroup and focus.is_complete()):
-            
-            # next is
-            # Binary
-            if token_type == TOKEN_TYPE_BINARY:
-#                 print('insert binary')
-                
-                operand = find_token_definition(value, TOKEN_TYPE_BINARY)
-                next_node = NodeBinary(operand)
-                    
-                parent_node = bubble_up(focus.parent, next_node)
-                child_node = parent_node.get_right()
-                parent_node.set_right(next_node)
-                next_node.set_left(child_node)
-                focus = next_node
-                
-            
-            # next is
-            # Unary right
-            elif token_type == TOKEN_TYPE_UNARY_RIGHT:
-#                 print('insert right unary')
-                
-                operand = find_token_definition(value, TOKEN_TYPE_UNARY_RIGHT)
-                next_node = NodeUnaryRight(operand)
-                    
-                parent_node = focus.parent # bubble_up(focus.parent, next_node)
-                child_node = parent_node.get_right()
-                parent_node.set_right(next_node)
-                next_node.set_left(child_node)
-                # focus = next_node
-            
-            # next is
-            # New item
-            elif token_type == TOKEN_TYPE_NEW_ITEM:
-#                 print('new item')
-                
-                token_definition = find_token_definition(value, TOKEN_TYPE_NEW_ITEM)
-    
-                parent_node = bubble_up_to_group(focus.parent)
-                
-                if token_definition.token in parent_node.group_definition.seperators:
-                    
-                    depth = parent_node.group_definition.seperators[token_definition.token]
-                    if depth > 0:
-                        parent_node.increase(depth)
-                        focus = parent_node
+        # TOKEN_TYPE_STRING
+        # TOKEN_TYPE_INTEGER
+        # TOKEN_TYPE_NUMBER
+        # TOKEN_TYPE_LITERAL
+
+        # TOKEN_TYPE_OPEN_GROUP
+        # TOKEN_TYPE_BINARY
+        # TOKEN_TYPE_UNARY_LEFT
+        # TOKEN_TYPE_UNARY_RIGHT
+
+        # TOKEN_TYPE_NEW_ITEM
+        # TOKEN_TYPE_CLOSE_GROUP
+
+        for token in tokens:
+
+
+            # focus is
+            # Binary Operator
+            # Left Unary Operator
+            if type(self.focus) in [
+                NodeBinary,
+                NodeUnaryLeft,
+            ]:
+
+                # next is 
+                # Unary left
+                if token.token_type == TOKEN_TYPE_UNARY_LEFT:
+
+                    operand = find_token_definition(token.string, TOKEN_TYPE_UNARY_LEFT)
+                    next_node = NodeUnaryLeft(operand)
+
+                    self.focus.set_right(next_node)
+                    self.focus = next_node
+
+                # next is
+                # Group
+                elif token.token_type == TOKEN_TYPE_OPEN_GROUP:
+
+                    group = find_token_definition(token.string, TOKEN_TYPE_OPEN_GROUP, lambda x:x.open_token)
+                    next_node = NodeGroup(group)
+                    self.focus.set_right(next_node)
+                    self.focus = next_node
+
+                # next is
+                # TOKEN_TYPE_STRING
+                # TOKEN_TYPE_INTEGER
+                # TOKEN_TYPE_NUMBER
+                # TOKEN_TYPE_LITERAL
+                elif token.token_type in TOKEN_TYPE_VALUE:
+
+                    next_node = NodeValue(token.string, token.token_type)
+                    self.focus.set_right(next_node)
+                    self.focus = next_node
+
                 else:
-                    raise Exception(f"token '{value}' not allowed here")
-                    
-            
-            # next is
-            # Close group
-            elif token_type == TOKEN_TYPE_CLOSE_GROUP:
-#                 print('close group')
-                
-                parent_node = bubble_up_to_group(focus.parent)
-                parent_node.close()
-                focus = parent_node
-            
-            # next is
-            else:
-                raise Exception(f"token '{value}' not allowed here")
-#                 print('start new item in parent group')
-        
-        
-        # focus is
-        # Open Group
-        elif type(focus) == NodeGroup and not focus.is_complete(): 
-            
-            # next is
-            # Binary - use ans on left
-            if token_type == TOKEN_TYPE_BINARY:
-#                 print('insert binary with ans as left')
+                    raise TokenNotAllowedException(token)
 
-                left = NodeValue('ans', TOKEN_TYPE_LITERAL)
-                
-                operand = find_token_definition(value, TOKEN_TYPE_BINARY)
-                next_node = NodeBinary(operand)
-                next_node.set_left(left)
-                
-                focus.add(next_node)
-                focus = next_node
-            
-            # next is
-            # Unary left
-            elif token_type == TOKEN_TYPE_UNARY_LEFT:
-#                 print('add unary left')
-                
-                operand = find_token_definition(value, TOKEN_TYPE_UNARY_LEFT)
-                next_node = NodeUnaryLeft(operand)
-                
-                focus.add(next_node)
-                focus = next_node
-            
-            # next is
-            # Group
-            elif token_type == TOKEN_TYPE_OPEN_GROUP:
-#                 print('add open group')
-                
-                group = find_token_definition(value, TOKEN_TYPE_OPEN_GROUP, lambda x:x.open_token)
-                next_node = NodeGroup(group)
-                focus.add(next_node)
-                focus = next_node
-            
-            # next is
-            # Close Group
-            elif token_type == TOKEN_TYPE_CLOSE_GROUP:
-#                 print('close group')
-                
-                focus.close()
-            
-            # next is
-            # TOKEN_TYPE_STRING
-            # TOKEN_TYPE_INTEGER
-            # TOKEN_TYPE_NUMBER
-            # TOKEN_TYPE_LITERAL
-            elif token_type in TOKEN_TYPE_VALUE:
-#                 print('add value')
-                
-                next_node = NodeValue(value, token_type)
-                focus.add(next_node)
-                focus = next_node
-                
-            # next is 
-            # TOKEN_TYPE_NEW_ITEM
-            elif token_type == TOKEN_TYPE_NEW_ITEM:
-#                 print('new item/dimension')
-                
-                token_definition = find_token_definition(value, TOKEN_TYPE_NEW_ITEM)
-                
-                if token_definition.token in focus.group_definition.seperators:
-                    
-                    depth = focus.group_definition.seperators[token_definition.token]
-                    if depth > 0:
-                        focus.increase(depth)
+
+            # focus is
+            # Value
+            # Closed Group
+            elif type(self.focus) == NodeValue or (type(self.focus) == NodeGroup and self.focus.is_complete()):
+
+                # next is
+                # Binary
+                if token.token_type in [TOKEN_TYPE_BINARY, TOKEN_TYPE_BINARY_CONTINUING]:
+
+                    operand = find_token_definition(token.string, TOKEN_TYPE_BINARY)
+                    next_node = NodeBinary(operand)
+
+                    parent_node = bubble_up(self.focus.parent, next_node)
+                    child_node = parent_node.get_right()
+                    parent_node.set_right(next_node)
+                    next_node.set_left(child_node)
+                    self.focus = next_node
+
+
+                # next is
+                # Unary right
+                elif token.token_type == TOKEN_TYPE_UNARY_RIGHT:
+
+                    operand = find_token_definition(token.string, TOKEN_TYPE_UNARY_RIGHT)
+                    next_node = NodeUnaryRight(operand)
+
+                    parent_node = self.focus.parent # bubble_up(self.focus.parent, next_node)
+                    child_node = parent_node.get_right()
+                    parent_node.set_right(next_node)
+                    next_node.set_left(child_node)
+                    # self.focus = next_node
+
+                # next is
+                # New item
+                elif token.token_type == TOKEN_TYPE_NEW_ITEM:
+
+                    token_definition = find_token_definition(token.string, TOKEN_TYPE_NEW_ITEM)
+
+                    parent_node = bubble_up_to_group(self.focus.parent)
+
+                    if token_definition.token in parent_node.group_definition.seperators:
+
+                        depth = parent_node.group_definition.seperators[token_definition.token]
+                        if depth > 0:
+                            parent_node.increase(depth)
+                            self.focus = parent_node
+                    else:
+                        raise TokenNotAllowedException(token)
+
+
+                # next is
+                # Close group
+                elif token.token_type == TOKEN_TYPE_CLOSE_GROUP:
+
+                    parent_node = bubble_up_to_group(self.focus.parent)
+                    parent_node.close()
+                    self.focus = parent_node
+
+                # next is
                 else:
-                    raise Exception(f"token '{value}' not allowed here")
-                
-            # next is
-            else:
-                raise Exception(f"token '{value}' not allowed here")
-#                 print('start new item in parent group')
-            
-        
-    
-    return root
-    
+                    raise TokenNotAllowedException(token)
+
+
+            # focus is
+            # Open Group
+            elif type(self.focus) == NodeGroup and not self.focus.is_complete(): 
+
+                # next is
+                # Binary - use ans on left
+                if token.token_type == TOKEN_TYPE_BINARY:
+
+                    left = NodeValue('ans', TOKEN_TYPE_LITERAL)
+
+                    operand = find_token_definition(token.string, TOKEN_TYPE_BINARY)
+                    next_node = NodeBinary(operand)
+                    next_node.set_left(left)
+
+                    self.focus.add(next_node)
+                    self.focus = next_node
+
+                # next is
+                # Unary left
+                elif token.token_type == TOKEN_TYPE_UNARY_LEFT:
+
+                    operand = find_token_definition(token.string, TOKEN_TYPE_UNARY_LEFT)
+                    next_node = NodeUnaryLeft(operand)
+
+                    self.focus.add(next_node)
+                    self.focus = next_node
+
+                # next is
+                # Group
+                elif token.token_type == TOKEN_TYPE_OPEN_GROUP:
+
+                    group = find_token_definition(token.string, TOKEN_TYPE_OPEN_GROUP, lambda x:x.open_token)
+                    next_node = NodeGroup(group)
+                    self.focus.add(next_node)
+                    self.focus = next_node
+
+                # next is
+                # Close Group
+                elif token.token_type == TOKEN_TYPE_CLOSE_GROUP:
+
+                    self.focus.close()
+
+                # next is
+                # TOKEN_TYPE_STRING
+                # TOKEN_TYPE_INTEGER
+                # TOKEN_TYPE_NUMBER
+                # TOKEN_TYPE_LITERAL
+                elif token.token_type in TOKEN_TYPE_VALUE:
+
+                    next_node = NodeValue(token.string, token.token_type)
+                    self.focus.add(next_node)
+                    self.focus = next_node
+
+                # next is 
+                # TOKEN_TYPE_NEW_ITEM
+                elif token.token_type == TOKEN_TYPE_NEW_ITEM:
+
+                    token_definition = find_token_definition(token.string, TOKEN_TYPE_NEW_ITEM)
+
+                    if token_definition.token in self.focus.group_definition.seperators:
+
+                        depth = self.focus.group_definition.seperators[token_definition.token]
+                        if depth > 0:
+                            self.focus.increase(depth)
+                    else:
+                        raise TokenNotAllowedException(token)
+
+                # next is
+                else:
+                    raise TokenNotAllowedException(token)
+
+
+
+        return self.root
+
+
+# ## Computation Graph
+
+# In[68]:
 
 
 def build_computation_graph(token_tree):
     return token_tree.get_evaluable()
 
+
+# # Excecute
+
+# ## Environment
+
+# In[69]:
 
 
 class Environment():
@@ -1954,15 +2511,20 @@ class Environment():
         else:
             return False
         
-    def addLn(self, ln):
-        name = f'ln{self.ln_count}'
-        self[name] = ln
-        self[''] = ln
+    def getLnCount(self):
+        return str(self.ln_count)
+        
+    def addLn(self, value, code, environment):
+        in_name = f'in{self.ln_count}'
+        out_name = f'out{self.ln_count}'
+        self[in_name] = define_function(environment, (), code)
+        self[out_name] = value
+        self[''] = value
         
         self.ln_count += 1
         self.ans_available = True
         
-        return name
+        return out_name
     
     def enterScope(self, dictionary=None):
         return Environment(self, dictionary)
@@ -1976,6 +2538,8 @@ class Environment():
     def __str__(self):
         return f'Environment({self.dictionary, self.parent})'
 
+
+# In[70]:
 
 
 def create_base_environment():
@@ -2005,10 +2569,48 @@ def create_base_environment():
     return environment
 
 
+# ## Evaluate
+
+# In[71]:
+
 
 def evaluate(computation_graph, environment):
     return computation_graph.eval(environment)
 
+
+# In[72]:
+
+
+def read(string, environment, lexer=None, token_tree_builder=None, **kwargs):
+    
+    lexer = lexer or Lexer(environment.ans_available)
+    tokens = lexer.process(string)
+    
+    token_tree_builder = token_tree_builder or TokenTreeBuilder()
+    token_tree = token_tree_builder.build(tokens)
+    is_complete = token_tree.is_complete(True)
+    
+    return {
+        'environment': environment,
+        'lexer':       lexer,
+        'token_tree_builder': token_tree_builder,
+        'is_complete': is_complete,
+    }
+
+
+# In[73]:
+
+
+def execute(token_tree_builder, environment, **kwargs):
+    computation_graph = build_computation_graph(token_tree_builder.root)
+    result = evaluate(computation_graph, environment)
+    ln_name = environment.addLn(result, computation_graph, environment)
+    print_result(result, ln_name)
+
+    return result
+
+
+# In[74]:
 
 
 def print_result(result, ln_name):
@@ -2022,55 +2624,49 @@ def print_result(result, ln_name):
     print(*lines, sep='\n')
 
 
+# ## Run
+
+# In[75]:
+
 
 def calc(query, environment, debug=False):
-        
-#     commands
-#     if   query == 'exit':   break
-#     elif query == 'help':   help()
-#     elif query == 'ref':    ref()
-#     elif query == 'clear':  clear()
-#     elif query == 'copy':   pyperclip.copy(ans)
-#     elif query == '=':      pyperclip.copy(ans)
 
-#     # evaluate query
-#     elif query != "":
-    
-
-#     if debug: print('environment', environment, end='\n\n')
-    
-    tokens = lexing(query, environment.ans_available)
-    if debug: print('tokens', tokens, end='\n\n')
-    
-    token_tree = build_token_tree(tokens)
-    if debug: print('token_tree', token_tree, end='\n\n')
-    
-    computation_graph = build_computation_graph(token_tree)
-    if debug: print('computation_graph', computation_graph, end='\n\n')
-    
-    result = evaluate(computation_graph, environment)
-    
-    ln_name = environment.addLn(result)
-    print_result(result, ln_name)
-
+    context = read(query, environment)
+    result = execute(**context)
     return result
 
 
 
-e = create_base_environment()
+os.system('title Calculator')
+
+environment = create_base_environment()
 while True:
     try:
-        command = input('>>>> ')
-        if command == 'exit':
-            break
-        elif command.strip() == '':
+        in_name = environment.getLnCount()
+        command = input(f' in{in_name}> ')
+        if command.strip() == '':
             continue
+        if command.strip() == 'exit':
+            break
 
-        calc(command, e)
+        context = read(command, environment)
+
+        while not context['is_complete']:
+            command = '\n' + input(' ' * len(in_name) + '   > ')
+            context = read(command, **context)
+
+        execute(**context)
         print('')
 
     except KeyboardInterrupt:
-        print('exiting...')
-        break
+        # print('\nexiting...')
+        # break
+
+        if '' in environment:
+            pyperclip.copy(str(environment[''].first.value))
+            print('\ncopied to clipboard')
+        else:
+            print('\nnothing to copy')
+        continue
     except Exception as exception:
         print(exception)
