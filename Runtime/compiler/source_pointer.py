@@ -1,0 +1,2 @@
+class SourcePointer:
+    pass

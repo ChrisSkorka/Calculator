@@ -1,4 +1,4 @@
-import compiler.syntax_tree.token_node_builder
+from compiler.abstract_syntax_tree import *
 
 LEFT_ASSOCIATIVE, RIGHT_ASSOCIATIVE = +1, -1 # Left to right, Right to left
 KEYWORD, VALUE, INFIX, CONTINUING_INFIX, PREFIX, POSTFIX, CONTINUING_POSTFIX, SEPERATORS, GROUP_OPEN, GROUP_CLOSE = 0,1,2,3,4,5,6,7,8,9
@@ -12,7 +12,7 @@ values = [
         'precedence':       9,
         'continuing':       False,
         'function':         'number',
-        'builder':          compiler.syntax_tree.token_node_builder.ValueTokenNodeBuilder,
+        'builder':          ValueTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -21,7 +21,7 @@ values = [
         'precedence':       9,
         'continuing':       False,
         'function':         'integer',
-        'builder':          compiler.syntax_tree.token_node_builder.ValueTokenNodeBuilder,
+        'builder':          ValueTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -30,7 +30,7 @@ values = [
         'precedence':       9,
         'continuing':       False,
         'function':         'string',
-        'builder':          compiler.syntax_tree.token_node_builder.ValueTokenNodeBuilder,
+        'builder':          ValueTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -39,7 +39,7 @@ values = [
         'precedence':       9,
         'continuing':       False,
         'function':         'literal',
-        'builder':          compiler.syntax_tree.token_node_builder.ValueTokenNodeBuilder,
+        'builder':          ValueTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -48,7 +48,6 @@ values = [
         'precedence':       9,
         'continuing':       False,
         'function':         'comment',
-        'builder':          compiler.syntax_tree.token_node_builder.ValueTokenNodeBuilder,
         'non_code':         True,
     },
 ]
@@ -141,7 +140,7 @@ keywords = [
         'precedence':       0,
         'continuing':       False,
         'function':         'continue',
-        'builder':          compiler.syntax_tree.token_node_builder.ReturnTokenNodeBuilder,
+        'builder':          ReturnTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -150,7 +149,7 @@ keywords = [
         'precedence':       0,
         'continuing':       False,
         'function':         'break',
-        'builder':          compiler.syntax_tree.token_node_builder.ReturnTokenNodeBuilder,
+        'builder':          ReturnTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -159,7 +158,7 @@ keywords = [
         'precedence':       0,
         'continuing':       False,
         'function':         'return',
-        'builder':          compiler.syntax_tree.token_node_builder.ReturnTokenNodeBuilder,
+        'builder':          ReturnTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -180,7 +179,7 @@ infix_operators = [
         'precedence':       3,
         'continuing':       True,
         'function':         'add',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -189,7 +188,7 @@ infix_operators = [
         'precedence':       3,
         'continuing':       True,
         'function':         'sub',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -198,7 +197,7 @@ infix_operators = [
         'precedence':       4,
         'continuing':       True,
         'function':         'mul',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -207,7 +206,7 @@ infix_operators = [
         'precedence':       4,
         'continuing':       True,
         'function':         'div',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -216,7 +215,7 @@ infix_operators = [
         'precedence':       5,
         'continuing':       True,
         'function':         'div',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    RIGHT_ASSOCIATIVE,
     },
     {
@@ -225,7 +224,7 @@ infix_operators = [
         'precedence':       4,
         'continuing':       True,
         'function':         'matmul',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -234,7 +233,7 @@ infix_operators = [
         'precedence':       4,
         'continuing':       True,
         'function':         'dotmul',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -243,7 +242,7 @@ infix_operators = [
         'precedence':       4,
         'continuing':       False,
         'function':         'root',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -252,7 +251,7 @@ infix_operators = [
         'precedence':       4,
         'continuing':       False,
         'function':         'at',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -261,7 +260,7 @@ infix_operators = [
         'precedence':       8,
         'continuing':       True,
         'function':         'dot',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -270,7 +269,7 @@ infix_operators = [
         'precedence':       8,
         'continuing':       True,
         'function':         'colon',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -279,7 +278,67 @@ infix_operators = [
         'precedence':       1,
         'continuing':       False,
         'function':         'range',
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
+        'associativity':    LEFT_ASSOCIATIVE,
+    },
+    {
+        'symbol':           '==',
+        'syntax_type':      INFIX,
+        'precedence':       1,
+        'continuing':       True,
+        'function':         'equals',
+        'chain':            ChainComparitorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
+        'associativity':    LEFT_ASSOCIATIVE,
+    },
+    {
+        'symbol':           '!=',
+        'syntax_type':      INFIX,
+        'precedence':       1,
+        'continuing':       True,
+        'function':         'not_equals',
+        'chain':            ChainComparitorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
+        'associativity':    LEFT_ASSOCIATIVE,
+    },
+    {
+        'symbol':           '<=',
+        'syntax_type':      INFIX,
+        'precedence':       1,
+        'continuing':       True,
+        'function':         'less_than_equals',
+        'chain':            ChainComparitorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
+        'associativity':    LEFT_ASSOCIATIVE,
+    },
+    {
+        'symbol':           '>=',
+        'syntax_type':      INFIX,
+        'precedence':       1,
+        'continuing':       True,
+        'function':         'greater_than_equals',
+        'chain':            ChainComparitorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
+        'associativity':    LEFT_ASSOCIATIVE,
+    },
+    {
+        'symbol':           '<',
+        'syntax_type':      INFIX,
+        'precedence':       1,
+        'continuing':       True,
+        'function':         'less_than',
+        'chain':            ChainComparitorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
+        'associativity':    LEFT_ASSOCIATIVE,
+    },
+    {
+        'symbol':           '>',
+        'syntax_type':      INFIX,
+        'precedence':       1,
+        'continuing':       True,
+        'function':         'greater_than',
+        'chain':            ChainComparitorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -288,19 +347,28 @@ infix_operators = [
         'precedence':       0,
         'continuing':       False,
         'function':         None,
-        'builder':          compiler.syntax_tree.token_node_builder.InfixOperatorTokenNodeBuilder,
+        'builder':          InfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
 ]
 
 prefix_operators = [
     {
+        'symbol':           '...',
+        'syntax_type':      PREFIX,
+        'precedence':       3,
+        'continuing':       False,
+        'function':         'unload',
+        'builder':          PrefixOperatorTokenNodeBuilder,
+        'associativity':    RIGHT_ASSOCIATIVE,
+    },
+    {
         'symbol':           '+',
         'syntax_type':      PREFIX,
         'precedence':       3,
         'continuing':       False,
         'function':         'pos',
-        'builder':          compiler.syntax_tree.token_node_builder.PrefixOperatorTokenNodeBuilder,
+        'builder':          PrefixOperatorTokenNodeBuilder,
         'associativity':    RIGHT_ASSOCIATIVE,
     },
     {
@@ -309,7 +377,7 @@ prefix_operators = [
         'precedence':       3,
         'continuing':       False,
         'function':         'neg',
-        'builder':          compiler.syntax_tree.token_node_builder.PrefixOperatorTokenNodeBuilder,
+        'builder':          PrefixOperatorTokenNodeBuilder,
         'associativity':    RIGHT_ASSOCIATIVE,
     },
     {
@@ -318,7 +386,7 @@ prefix_operators = [
         'precedence':       3,
         'continuing':       False,
         'function':         'inv',
-        'builder':          compiler.syntax_tree.token_node_builder.PrefixOperatorTokenNodeBuilder,
+        'builder':          PrefixOperatorTokenNodeBuilder,
         'associativity':    RIGHT_ASSOCIATIVE,
     },
     {
@@ -327,7 +395,7 @@ prefix_operators = [
         'precedence':       3,
         'continuing':       False,
         'function':         'sqrt',
-        'builder':          compiler.syntax_tree.token_node_builder.PrefixOperatorTokenNodeBuilder,
+        'builder':          PrefixOperatorTokenNodeBuilder,
         'associativity':    RIGHT_ASSOCIATIVE,
     },
 ]
@@ -339,7 +407,7 @@ postfix_operators = [
         'precedence':       7,
         'continuing':       False,
         'function':         'fact',
-        'builder':          compiler.syntax_tree.token_node_builder.PostfixOperatorTokenNodeBuilder,
+        'builder':          PostfixOperatorTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
 ]
@@ -349,21 +417,21 @@ seperators = [
         'symbol':           ',',
         'syntax_type':      SEPERATORS,
         'function':         'comma',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
         'symbol':           ';',
         'syntax_type':      SEPERATORS,
         'function':         'semi_column',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
         'symbol':           '\n',
         'syntax_type':      SEPERATORS,
         'function':         'newline',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
 ]
@@ -375,7 +443,7 @@ group_open = [
         'precedence':       0,
         'continuing':       False,
         'function':         'round_group',
-        'builder':          compiler.syntax_tree.token_node_builder.GroupTokenNodeBuilder,
+        'builder':          GroupTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -384,7 +452,7 @@ group_open = [
         'precedence':       0,
         'continuing':       False,
         'function':         'square_group',
-        'builder':          compiler.syntax_tree.token_node_builder.GroupTokenNodeBuilder,
+        'builder':          GroupTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -393,7 +461,7 @@ group_open = [
         'precedence':       0,
         'continuing':       False,
         'function':         'curly_group',
-        'builder':          compiler.syntax_tree.token_node_builder.GroupTokenNodeBuilder,
+        'builder':          GroupTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -402,7 +470,7 @@ group_open = [
         'precedence':       0,
         'continuing':       False,
         'function':         'straight_group',
-        'builder':          compiler.syntax_tree.token_node_builder.GroupTokenNodeBuilder,
+        'builder':          GroupTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
 ]
@@ -414,7 +482,7 @@ group_close = [
         'precedence':       0,
         'continuing':       False,
         'function':         'round_group',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -423,7 +491,7 @@ group_close = [
         'precedence':       0,
         'continuing':       False,
         'function':         'square_group',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -432,7 +500,7 @@ group_close = [
         'precedence':       0,
         'continuing':       False,
         'function':         'curly_group',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
     {
@@ -441,7 +509,7 @@ group_close = [
         'precedence':       0,
         'continuing':       False,
         'function':         'straight_group',
-        'builder':          compiler.syntax_tree.token_node_builder.SignalTokenNodeBuilder,
+        'builder':          SyntaxVerticalSignalTokenNodeBuilder,
         'associativity':    LEFT_ASSOCIATIVE,
     },
 ]

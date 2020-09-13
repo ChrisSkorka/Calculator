@@ -1,5 +1,4 @@
 import re
-import compiler.tokens
 import compiler.token_matcher
 
 newline_token = [t for t in compiler.tokens.seperators if t['function'] == 'newline'][0]
@@ -35,11 +34,12 @@ class Tokenizer:
         else:
             indent = 0
 
-        self.tokens.append({**newline_token, 'indent': indent})
 
         i = 0
         w = len(indent_str)
         l = len(self.source)-1
+
+        self.tokens.append({**newline_token, 'indent': indent, 'ln': l, 'c': i})
 
         while i < len(code_str):
             
@@ -152,7 +152,7 @@ class Tokenizer:
 
             if token:
                 if not token.get('non_code', False):
-                    self.tokens.append(token)
+                    self.tokens.append({**token, 'ln': l, 'c': i})
                 i += len(token['symbol'])
             else:
                 raise Exception(f'Token not allowed Tokenizer.tokenizeLine() at ln={l}, c={i}\n{code_str[i:i+10]}')
