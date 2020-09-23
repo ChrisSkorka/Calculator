@@ -1,7 +1,24 @@
 
-g = function (a,b,c:(null,2) = [1,2,,]):
+g = function (a,b,c = [1,2,,])
+		@shape(c = ( null ,2)):
 	x = a * b + c
 	return x
+
+g = function @shape(c = ( null ,2))
+	(a,b,c = [1,2,,]):
+	x = a * b + c
+	return x
+	
+g = function extends shape(c: ( null ,2))
+	(a,b,c = [1,2,,]):
+	x = a * b + c
+	return x
+
+g = shape {'c': (null,2)} function (a,b,c = [1,2,,]):
+		(a,b,c = [1,2,,]):
+		x = a * b + c
+		return x
+	)
 
 
 C = class (D):
@@ -77,7 +94,37 @@ vec [5, 10]
 
 [...for i=0->10: i,, ...for i=0->10: i^2,, ...for i=0->10: i^3]
 
+dict = {
+	'a': 1,
+	'b': 2 + 3,
+}
+
 
 return
 return x
 return x if b
+
+// order of precedence
+Group		p	symbols
+
+Assignment	0	=
+constructs	1	class function if switch for while continue break return
+codeblock	2	:
+logic1		3	or
+logic2		4	and
+logic3		5	not
+comparitors	6	< <= > >= != ==
+bitwise1	7
+bitwise2	8
+bitwise3	9
+range		10	->
+add&sub		11	+ -
+mul&div		12	* / # .* @
+exponent	13	^ $
+prefix		14	- + ~ $ ...
+postfix		15	!
+reference	16	. ..
+value		17	val () [] {} ||
+
+
+signals			, ; \n ) ] } |

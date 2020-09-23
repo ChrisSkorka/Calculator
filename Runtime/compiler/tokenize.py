@@ -1,7 +1,9 @@
 import re
 import compiler.token_matcher
+import compiler.tokens_definition as tokens_definition
+from compiler.constants import *
 
-newline_token = [t for t in compiler.tokens.seperators if t['function'] == 'newline'][0]
+newline_token = [t for t in tokens_definition.seperator_signals if t['function'] == 'newline'][0]
 
 class Tokenizer:
 
@@ -28,9 +30,13 @@ class Tokenizer:
         if len(code_str) == 0:
             return
 
-        if self.indent == None and len(indent_str) > 0:
-            self.indent = indent_str
+        if len(indent_str) > 0:
+
+            if self.indent == None:
+                self.indent = indent_str
+            
             indent = indent_str.count(self.indent)
+
         else:
             indent = 0
 
@@ -53,96 +59,39 @@ class Tokenizer:
 
             if len(self.tokens) <= 1 and self.continuing:
                 token_type_candidates_keys += [
-                    compiler.tokens.CONTINUING_INFIX,
-                    compiler.tokens.CONTINUING_POSTFIX,
+                    CONTINUING_INFIX,
+                    CONTINUING_POSTFIX,
                 ]
 
             if last_type in [
-                    compiler.tokens.SEPERATORS,
+                    SEPERATOR,
                 ]:
                 token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.PREFIX,
-                    compiler.tokens.SEPERATORS,
-                    compiler.tokens.GROUP_OPEN,
-                    compiler.tokens.GROUP_CLOSE,
+                    PREFIX,
+                    SEPERATOR,
+                    END_GROUP,
+                    VALUE,
                 ]
             elif last_type in [
-                    compiler.tokens.KEYWORD,
+                    VALUE,
+                    POSTFIX,
+                    END_GROUP,
                 ]:
                 token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.PREFIX,
-                    compiler.tokens.SEPERATORS,
-                    compiler.tokens.GROUP_OPEN,
-                    compiler.tokens.GROUP_CLOSE,
+                    INFIX,
+                    POSTFIX,
+                    CALLED_PREFIX,
+                    SEPERATOR,
+                    END_GROUP,
+                    CALLED_VALUE,
                 ]
             elif last_type in [
-                    compiler.tokens.VALUE,
+                    INFIX,
+                    PREFIX,
                 ]:
                 token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.INFIX,
-                    compiler.tokens.POSTFIX,
-                    compiler.tokens.SEPERATORS,
-                    compiler.tokens.GROUP_OPEN,
-                    compiler.tokens.GROUP_CLOSE,
-                ]
-            elif last_type in [
-                    compiler.tokens.GROUP_OPEN,
-                ]:
-                token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.PREFIX,
-                    compiler.tokens.SEPERATORS,
-                    compiler.tokens.GROUP_OPEN,
-                    compiler.tokens.GROUP_CLOSE,
-                ]
-            elif last_type in [
-                    compiler.tokens.GROUP_CLOSE,
-                ]:
-                token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.INFIX,
-                    compiler.tokens.POSTFIX,
-                    compiler.tokens.SEPERATORS,
-                    compiler.tokens.GROUP_OPEN,
-                    compiler.tokens.GROUP_CLOSE,
-                ]
-            elif last_type in [
-                    compiler.tokens.INFIX,
-                ]:
-                token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.PREFIX,
-                    compiler.tokens.GROUP_OPEN,
-                ]
-            elif last_type in [
-                    compiler.tokens.PREFIX,
-                ]:
-                token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.PREFIX,
-                    compiler.tokens.GROUP_OPEN,
-                ]
-            elif last_type in [
-                    compiler.tokens.POSTFIX,
-                ]:
-                token_type_candidates_keys += [
-                    compiler.tokens.KEYWORD,
-                    compiler.tokens.VALUE,
-                    compiler.tokens.INFIX,
-                    compiler.tokens.POSTFIX,
-                    compiler.tokens.SEPERATORS,
-                    compiler.tokens.GROUP_OPEN,
-                    compiler.tokens.GROUP_CLOSE,
+                    PREFIX,
+                    VALUE,
                 ]
 
 
@@ -152,8 +101,20 @@ class Tokenizer:
 
             if token:
                 if not token.get('non_code', False):
+
+                    if 'preceding_token' in token:
+                        preceding_token = token['preceding_token']
+                        # print('token')
+                        # print(token)
+                        # print('preceding_token')
+                        # print(preceding_token)
+                        self.tokens.append({**preceding_token, 'ln': l, 'c': i})
+                    
                     self.tokens.append({**token, 'ln': l, 'c': i})
+
+
                 i += len(token['symbol'])
+
             else:
                 raise Exception(f'Token not allowed Tokenizer.tokenizeLine() at ln={l}, c={i}\n{code_str[i:i+10]}')
             

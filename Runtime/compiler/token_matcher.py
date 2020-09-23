@@ -1,5 +1,5 @@
 import re
-import compiler.tokens
+import compiler.tokens_definition as tokens_definition
 
 
 
@@ -59,28 +59,30 @@ class FirstMatcher(TokenMatcher):
                 return candidate
         return None
 
+# select regex or keyword on a token by tokenbasis
 
+value_matchers =                        FirstMatcher(  [RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.values])
+infix_operator_matchers =               LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.infix_operators])
+prefix_operator_matchers =              LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.prefix_operators])
+postfix_operator_matchers =             LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.postfix_operators])
+seperator_signals_matchers =            LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.seperator_signals])
+close_signals_matchers =                LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.close_signals])
 
-value_matchers =                        FirstMatcher(  [  RegexMatcher(t) for t in compiler.tokens.values])
-keyword_matchers =                      LongestMatcher([KeywordMatcher(t) for t in compiler.tokens.keywords])
-infix_operator_matchers =               LongestMatcher([KeywordMatcher(t) for t in compiler.tokens.infix_operators])
-continuing_infix_operator_matchers =    LongestMatcher([KeywordMatcher(t) for t in compiler.tokens.infix_operators if t.get('continuing', False)])
-prefix_operator_matchers =              LongestMatcher([KeywordMatcher(t) for t in compiler.tokens.prefix_operators])
-postfix_operator_matchers =             LongestMatcher([KeywordMatcher(t) for t in compiler.tokens.postfix_operators])
-continuing_postfix_operator_matchers =  LongestMatcher([KeywordMatcher(t) for t in compiler.tokens.postfix_operators if t.get('continuing', False)])
-sepperators_matchers =                  FirstMatcher(  [KeywordMatcher(t) for t in compiler.tokens.seperators])
-group_open_matchers =                   FirstMatcher(  [KeywordMatcher(t) for t in compiler.tokens.group_open])
-group_close_matchers =                  FirstMatcher(  [KeywordMatcher(t) for t in compiler.tokens.group_close])
+called_value_matchers =                 FirstMatcher(  [RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.called_values])
+called_prefix_operator_matchers =       LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.called_prefix_operators])
+continuing_infix_operator_matchers =    LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.continuing_infix_operators])
+continuing_postfix_operator_matchers =  LongestMatcher([RegexMatcher(t) if 'regex' in t else KeywordMatcher(t) for t in tokens_definition.continuing_postfix_operators])
 
 token_matchers = {
-    compiler.tokens.KEYWORD:            keyword_matchers, 
-    compiler.tokens.VALUE:              value_matchers, 
-    compiler.tokens.INFIX:              infix_operator_matchers, 
-    compiler.tokens.CONTINUING_INFIX:   continuing_infix_operator_matchers, 
-    compiler.tokens.PREFIX:             prefix_operator_matchers, 
-    compiler.tokens.POSTFIX:            postfix_operator_matchers, 
-    compiler.tokens.CONTINUING_POSTFIX: continuing_postfix_operator_matchers, 
-    compiler.tokens.SEPERATORS:         sepperators_matchers, 
-    compiler.tokens.GROUP_OPEN:         group_open_matchers, 
-    compiler.tokens.GROUP_CLOSE:        group_close_matchers, 
+    tokens_definition.VALUE:              value_matchers, 
+    tokens_definition.INFIX:              infix_operator_matchers, 
+    tokens_definition.PREFIX:             prefix_operator_matchers, 
+    tokens_definition.POSTFIX:            postfix_operator_matchers, 
+    tokens_definition.SEPERATOR:          seperator_signals_matchers, 
+    tokens_definition.END_GROUP:          close_signals_matchers, 
+
+    tokens_definition.CALLED_VALUE:       called_value_matchers, 
+    tokens_definition.CALLED_PREFIX:      called_prefix_operator_matchers, 
+    tokens_definition.CONTINUING_INFIX:   continuing_infix_operator_matchers, 
+    tokens_definition.CONTINUING_POSTFIX: continuing_postfix_operator_matchers, 
 }
