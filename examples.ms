@@ -58,17 +58,17 @@ switch value:
 
 
 
-for i = 0 -> 10:
+for i in 0 -> 10:
 	a += i
 	if a mod 2 == 0:
 		continue
 else:
 	a = 0
 	
-x = for i = 0 -> 10: i^1 else: 0
-s = sum for i = 0 -> 10: i
-s = sum for i = 0 -> 10: if i mod 2 == 0: i else: continue
-s = sum for i = 0 -> 10: 
+x = for i in 0 -> 10: i^1 else: 0
+s = sum for i in 0 -> 10: i
+s = sum for i in 0 -> 10: if i mod 2 == 0: i else: continue
+s = sum for i in 0 -> 10: 
 	if i mod 2 == 0: 
 		yield i 
 	else: 

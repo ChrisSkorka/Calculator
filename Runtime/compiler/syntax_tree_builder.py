@@ -1,4 +1,4 @@
-from compiler.abstract_syntax_tree import *
+from compiler.syntax_tree import *
 import compiler.tokens_definition as tokens_definition
 
 
@@ -6,7 +6,7 @@ import compiler.tokens_definition as tokens_definition
 class SyntaxTreeBuilder:
     def __init__(self):
         code_block_toke = [g for g in tokens_definition.infix_operators if g['function'] == 'colon'][0]
-        self.root = CodeBlockTokenNodeBuilder(code_block_toke)
+        self.root = CodeBlockSTTNB(code_block_toke)
         self.focus = self.root
         
     def parseLine(self, tokens):

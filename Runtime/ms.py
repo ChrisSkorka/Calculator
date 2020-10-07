@@ -12,6 +12,7 @@ import numpy as np
 from functools import reduce
 from itertools import product
 from datetime import datetime, date, time
+import readline
 
 
 # # Docs
@@ -1377,6 +1378,11 @@ built_ins.register_binary_operator('dot', 4, True)
 built_ins.register_left_unary_operator('$', 6)
 built_ins.register_binary_operator('$', 6)
 
+# functions as operators
+built_ins.register_left_unary_operator('ln', 2)
+built_ins.register_left_unary_operator('log2', 2)
+built_ins.register_left_unary_operator('log10', 2)
+
 # function call
 built_ins.register_binary_operator('9', 9)
 built_ins.set_evaluation_parameter('9', 1, 'force_array', True)
@@ -1556,6 +1562,12 @@ def absolute(A):
 built_ins.register_function('abs', absolute, None, (Real,), (0,))
 
 
+def log(A, B):
+    return Tensor(Real( math.log( A.first.value, B.first.value ) ))
+    
+built_ins.register_function('log', log, None, (Real,Real), (0,0))
+
+
 # #### Root and Square root $
 
 # In[50]:
@@ -1570,6 +1582,23 @@ def sqrt(A):
 built_ins.register_function('$', sqrt, None, (Real,), (0,))
 built_ins.register_function('$', root, None, (Real, Real), (0, 0))
 
+
+
+
+def log2(A):
+    return Tensor(Real( math.log2( A.first.value ) ))
+    
+def log10(A):
+    return Tensor(Real( math.log10( A.first.value ) ))
+    
+def ln(A):
+    return Tensor(Real( math.log( A.first.value ) ))
+    
+built_ins.register_function('log2', log2, None, (Real,), (0,))
+    
+built_ins.register_function('log10', log10, None, (Real,), (0,))
+    
+built_ins.register_function('ln', ln, None, (Real,), (0,))
 
 # #### Function Call
 
