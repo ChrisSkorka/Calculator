@@ -1,16 +1,13 @@
-from compiler.syntax_tree.token_node_builder import ValueSTTNB
-from compiler.syntax_tree.token_node_builder import InfixOperatorSTTNB
-from compiler.syntax_tree.token_node_builder import PrefixOperatorSTTNB
-from compiler.syntax_tree.token_node_builder import PostfixOperatorSTTNB
-
-from compiler.syntax_tree.token_node_builder import GroupSTTNB
-from compiler.syntax_tree.token_node_builder import CodeBlockSTTNB
-from compiler.syntax_tree.token_node_builder import ItemListSTTNB
-from compiler.syntax_tree.token_node_builder import ReferenceCodePairSTTNB
-from compiler.syntax_tree.token_node_builder import ValueCodePairSTTNB
-from compiler.syntax_tree.token_node_builder import CodeSTTNB
-from compiler.syntax_tree.token_node_builder import ReturnSTTNB
-
-from compiler.syntax_tree.token_node_builder import SyntaxSignalSTTNB
-
-from compiler.syntax_tree.token_node_builder import ChainComparitorSTTNB
+from compiler.syntax_tree.value import ValueSTTNB
+from compiler.syntax_tree.infix_operator import InfixOperatorSTTNB
+from compiler.syntax_tree.prefix_operator import PrefixOperatorSTTNB
+from compiler.syntax_tree.postfix_operator import PostfixOperatorSTTNB
+from compiler.syntax_tree.group import GroupSTTNB
+from compiler.syntax_tree.code_block import CodeBlockSTTNB
+from compiler.syntax_tree.item_list import ItemListSTTNB
+from compiler.syntax_tree.reference_code_pair import ReferenceCodePairSTTNB
+from compiler.syntax_tree.value_code_pair import ValueCodePairSTTNB
+from compiler.syntax_tree.code import CodeSTTNB
+from compiler.syntax_tree.return_stm import ReturnSTTNB
+from compiler.syntax_tree.syntax_signal import SyntaxSignalSTTNB
+from compiler.syntax_tree.chain_comparitor import ChainComparitorSTTNB
